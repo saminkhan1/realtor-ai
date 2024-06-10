@@ -48,12 +48,12 @@
 This project implements a real estate assistant that helps users search for properties based on various criteria. The assistant is built using Python and leverages natural language processing (NLP) techniques to understand user queries and provide relevant responses.
 
 The main components of the project include:
-- **Database Management:** The `data/` directory contains SQLite database files (`real_estate_data.db` and `backup_file.db`) to store real estate property data.
-- **Scripting:** The `scripts/` directory holds SQL scripts for database management and utility scripts like `search_real_estate.py` for property search functionality.
+- **Database Management:** The `data/` directory contains SQLite database files (`real_estate_data.db` and `realtor-data.csv`) to store real estate property data.
+- **Tools:** The `tools/` directory holds AI agent tools like `search_real_estate` in `real_estate_tool.py` for property search functionality.
 - **Source Code:** The `src/` directory contains the main source code of the project, including the agent logic (`agent.py`), state management (`state.py`), graph definition (`graph.py`), and initialization (`__init__.py`).
 - **Entry Point:** The `main.py` file serves as the entry point of the application, orchestrating the interaction with the real estate assistant.
 - **Dependencies:** The `requirements.txt` file lists all Python dependencies required for the project.
-- **Documentation:** The `README.md` file (this file) provides documentation and instructions for setting up and running the project.
+
 
 ## Usage
 
