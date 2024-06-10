@@ -35,8 +35,8 @@
    - Ensure that the `.env` file is included in the project's `.gitignore` to prevent sensitive information from being committed to version control.
 
 4. **Download and setup data**
-   - download csv file of realestate data from https://www.kaggle.com/datasets/ahmedshahriarsakib/usa-real-estate-dataset to /data folder
-   - use csv_to_sql.py and run the file to convert csv to sql database
+   - download csv file of realestate data from https://www.kaggle.com/datasets/ahmedshahriarsakib/usa-real-estate-dataset to `/data` folder
+   - use `csv_to_sql.py` and run the file to convert csv to sql database
 
 5. **Run the main application:**
    ```bash
