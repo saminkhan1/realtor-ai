@@ -30,7 +30,7 @@ class Assistant:
         return {"messages": result}
 
 
-llm = ChatOpenAI(model="gpt-4o")
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 
 re_search_assistant_prompt = ChatPromptTemplate.from_messages(
     [
