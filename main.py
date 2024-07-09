@@ -17,7 +17,7 @@ def main():
 
     questions = [
         "What properties are available in New York?",
-        "Show me houses with at least 3 bedrooms and 2 bathrooms.",
+        "Show me houses with at least 2 bedrooms and 2 bathrooms.",
         "Do you have any properties under $500,000?",
     ]
 

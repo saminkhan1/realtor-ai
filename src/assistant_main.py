@@ -2,12 +2,11 @@ from datetime import datetime
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableConfig
-from tools.real_estate_tool import search_real_estate
 from src.state import State
 from dotenv import load_dotenv
+from langchain_core.pydantic_v1 import BaseModel
 
 load_dotenv()
-
 
 class Assistant:
     def __init__(self, runnable: Runnable):
@@ -29,29 +28,36 @@ class Assistant:
                 break
         return {"messages": result}
 
+class ToSearchAssistant(BaseModel):
+    """Transfers work to a specialized assistant to search for real estates."""
+
+    # request: str = Field(
+    #     description="Any additional information or requests from the user regarding their search criteria."
+    # )
+
+    # class Config:
+    #     schema_extra = {
+    #         "example": {
+    #             "request": "The user is interested in outdoor activities and scenic views.",
+    #         }
+    #     }
 
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 
-re_search_assistant_prompt = ChatPromptTemplate.from_messages(
+
+main_assistant_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are a helpful real estate assistant. Use the provided tools to search for properties, "
-            "and provide the necessary information to assist the user's queries. When searching, be persistent. "
-            "Ensure that follow-up questions are dependent on the criteria/arguments from all previous messages unless explicitly stated otherwise."
-            "Expand your query bounds if the first search returns no results. Always consider the entire conversation history. "
-            "\n\nCurrent user:\n<User>\n{user_info}\n</User>",
+            "You are a helpful real estate assistant."
+            " Your primary role is to identify customer's intent"
+            " and delegate the task to the appropriate specialized assistant by invoking the corresponding tool"
+            " The user is not aware of the different specialized assistants, so do not mention them; just quietly delegate through function calls. "
         ),
         ("placeholder", "{messages}"),
     ]
 ).partial(time=datetime.now())
 
-
-re_search_tools = [
-    search_real_estate,
-    # Add other real estate tools if needed
-]
-
-re_search_assistant_runnable = re_search_assistant_prompt | llm.bind_tools(
-    re_search_tools
+main_assistant_runnable = main_assistant_prompt | llm.bind_tools(
+    [ToSearchAssistant]
 )
