@@ -6,7 +6,7 @@ from langgraph.graph.message import AnyMessage, add_messages
 # Define the SearchCriteria schema
 class SearchCriteria(TypedDict):
     city: Optional[str]
-    state_location: Optional[str] #changing it to state_location, to avoid confusion with langgraph's state
+    state: Optional[str]
     bedrooms: Optional[int]
     bathrooms: Optional[int]
     max_price: Optional[float]
