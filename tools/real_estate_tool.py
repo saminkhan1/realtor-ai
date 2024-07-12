@@ -7,7 +7,6 @@ from typing import Optional
 # Get the path to the database file relative to the current script
 db_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_estate_data.db")
 
-
 @tool
 def search_real_estate(
     brokered_by: Optional[str] = None,

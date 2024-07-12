@@ -26,35 +26,14 @@ def process_criteria(state: State):
             ToolMessage(
                 content="process_criteria",
                 tool_call_id=tool_call_id
+            ),
+            (
+                "user",
+                f"The user is looking for real estates with the following search criteria: {processed_criteria}"
             )
         ],
         "search_criteria": processed_criteria
     }
-
-
-class SearchAssistant:
-    def __init__(self, runnable: Runnable):
-        self.runnable = runnable
-
-    def __call__(self, state: State, config: RunnableConfig):
-        while True:
-            # force add processed criteria to the state
-            search_criteria = state.get("search_criteria", None)
-            query = f"The user wishes to look for real estates with the following search criteria {search_criteria}"
-            messages_with_query = state["messages"] + [("user", query)]
-            state = {**state, "messages": messages_with_query}
-            result = self.runnable.invoke(state)
-            
-            if not result.tool_calls and (
-                not result.content
-                or isinstance(result.content, list)
-                and not result.content[0].get("text")
-            ):
-                messages = state["messages"] + [("user", "Respond with a real output.")]
-                state = {**state, "messages": messages}
-            else:
-                break
-        return {"messages": result}
 
 re_search_assistant_prompt = ChatPromptTemplate.from_messages(
     [

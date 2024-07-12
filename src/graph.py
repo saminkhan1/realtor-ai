@@ -1,9 +1,8 @@
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import StateGraph
-from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.prebuilt import ToolNode, tools_condition
-from src.assistant_main import Assistant, ToSearchAssistant, main_assistant_runnable
-from src.assistant_search import process_criteria, search_tools, search_assistant_runnable, SearchAssistant
+from src.assistant_main import Assistant, main_assistant_runnable, ToSearchAssistant
+from src.assistant_search import process_criteria, search_tools, search_assistant_runnable
 from src.state import State
 from typing import Literal
 
@@ -35,7 +34,7 @@ def create_graph():
 
     # build search assistant
     builder.add_node("process_criteria", process_criteria)
-    builder.add_node("search_assistant", SearchAssistant(search_assistant_runnable))
+    builder.add_node("search_assistant", Assistant(search_assistant_runnable))
     builder.add_edge("process_criteria", "search_assistant")
 
     builder.add_node("tools", ToolNode(search_tools))

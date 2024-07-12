@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableConfig
 from src.state import State
 from dotenv import load_dotenv
-from langchain_core.pydantic_v1 import BaseModel
+from langchain_core.pydantic_v1 import BaseModel, Field
 
 load_dotenv()
 
@@ -31,16 +31,9 @@ class Assistant:
 class ToSearchAssistant(BaseModel):
     """Transfers work to a specialized assistant to search for real estates."""
 
-    # request: str = Field(
-    #     description="Any additional information or requests from the user regarding their search criteria."
-    # )
-
-    # class Config:
-    #     schema_extra = {
-    #         "example": {
-    #             "request": "The user is interested in outdoor activities and scenic views.",
-    #         }
-    #     }
+    request: str = Field(
+        description="Any additional information or requests from the user regarding their search criteria."
+    )
 
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 
