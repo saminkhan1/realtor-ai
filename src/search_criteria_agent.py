@@ -1,7 +1,7 @@
 from typing import Dict, Any
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, ToolMessage
 from langchain_openai import ChatOpenAI
-from src.state import State
+from src.util import State
 from dotenv import load_dotenv
 from typing import Optional
 
@@ -51,20 +51,12 @@ You are an AI assistant for a real estate search application. Your task is to in
 
 
 def search_criteria_agent(state: State) -> Dict[str, Any]:
-    # Extract the last user message
-    last_user_message = state["messages"][-1] if state["messages"] else None
+    last_tool_call = state["messages"][-1].tool_calls[0]
+    tool_call_id = last_tool_call["id"]
+    user_query = last_tool_call["args"]["request"]
 
-    if last_user_message is None:
-        return {
-            "messages": [
-                AIMessage(
-                    content="I'm sorry, but I couldn't find a user message to respond to."
-                )
-            ]
-        }
-
-    user_query = last_user_message.content
     current_criteria = state.get("search_criteria", {})
+
     # Prepare the messages for the ChatOpenAI model
     messages = [
         {"role": "system", "content": SYSTEM_MESSAGE},
@@ -88,6 +80,12 @@ def search_criteria_agent(state: State) -> Dict[str, Any]:
 
     # Return the updated state
     return {
-        "search_criteria": new_search_criteria,
-        "messages": [AIMessage(content=response)],
+        "search_criteria": new_search_criteria["search_criteria"],
+        "messages": [
+            ToolMessage(
+                    content="Entering search criteria agent",
+                    tool_call_id=tool_call_id,
+                ),
+            AIMessage(content=response)
+        ],
     }

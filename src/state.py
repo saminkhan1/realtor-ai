@@ -25,3 +25,4 @@ def update_search_criteria(
 class State(TypedDict):
     search_criteria: Annotated[SearchCriteria, update_search_criteria]
     messages: Annotated[list[AnyMessage], add_messages]
+
