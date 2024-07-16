@@ -70,13 +70,14 @@ def search_criteria_agent(state: State) -> Dict[str, Any]:
     # Extract the new search criteria from the response
     # Note: In a real implementation, you'd want to add error handling here
     new_search_criteria = eval(response.content)
+    print("new search criteria", new_search_criteria)
     # Generate a response message
     response = "I've updated your search criteria based on your request. Here's what I understood:\n"
     for key, value in new_search_criteria.items():
         if value is not None:
             response += f"- {key.replace('_', ' ').capitalize()}: {value}\n"
 
-    response += "\nIs there anything else you'd like to modify or add to your search?"
+    # response += "\nIs there anything else you'd like to modify or add to your search?"
 
     # Return the updated state
     return {

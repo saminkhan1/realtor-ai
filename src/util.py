@@ -15,12 +15,42 @@ class SearchCriteria(TypedDict):
     min_price: Optional[float]
 
 
-# Custom reducer function for search_criteria
+# # Custom reducer function for search_criteria
+# def update_search_criteria(
+#     current: SearchCriteria, update: SearchCriteria
+# ) -> SearchCriteria:
+#     # Merge the update into the current state
+#     return {**current, **update}
+
 def update_search_criteria(
-    current: SearchCriteria, update: SearchCriteria
+    current: SearchCriteria, new: SearchCriteria
 ) -> SearchCriteria:
-    # Merge the update into the current state
-    return {**current, **update}
+    result = current.copy()
+    
+    city_in_new = "city" in new
+    state_in_new = "state" in new
+
+    if city_in_new and state_in_new:
+        result["city"] = new["city"]
+        result["state"] = new["state"]
+    # if only "city" in new criteria, remove the previous "state" in criteria
+    # to avoid errors such as - city: Chicago, state: New York
+    # where previous criteria had - city: New York, state: New York
+    # and new criteria had - city: Chiaco, but no state
+    elif city_in_new:
+        result["city"] = new["city"]
+        result.pop("state", None)
+    elif state_in_new:
+        result["state"] = new["state"]
+        result.pop("city", None)
+    
+    # Merge the remaining criteria
+    for key in ["bedrooms", "bathrooms", "max_price", "min_price"]:
+        if key in new:
+            result[key] = new[key]
+    
+    return result
+
 
 
 # Define the State schema
