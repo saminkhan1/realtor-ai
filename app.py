@@ -35,7 +35,7 @@ async def handle_sms(request: Request):
         # Get the message the user sent our Twilio number
         form_data = await request.form()
         user_message = form_data.get('Body', None).strip()
-        logger.info(f"User message: {user_message}")
+        # logger.info(f"User message: {user_message}")
 
         result = graph.invoke(
             {
@@ -47,15 +47,16 @@ async def handle_sms(request: Request):
         )
 
         ai_message = result["messages"][-1].content
-        logger.info(f"AI message: {ai_message}")
+        # logger.info(f"AI message: {ai_message}")
 
         # Create Twilio response
         resp = MessagingResponse()
         resp.message(ai_message)
         final_response = str(resp)
-        logger.info(f"Final Twilio response: {final_response}")
+        # logger.info(f"Final Twilio response: {final_response}")
         
-        return Response(content=final_response, media_type="application/xml")
+        return Response(content=ai_message, media_type="text/plain")
+        # return Response(content=final_response, media_type="application/xml")
 
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}")

@@ -45,7 +45,7 @@ def update_search_criteria(
         result.pop("city", None)
     
     # Merge the remaining criteria
-    for key in ["bedrooms", "bathrooms", "max_price", "min_price"]:
+    for key in ["min_bedroom", "min_bathroom", "max_price", "min_price"]:
         if key in new:
             result[key] = new[key]
     
