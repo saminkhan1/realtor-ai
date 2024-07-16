@@ -29,36 +29,6 @@ questions = [
     # "Do you have any properties under $500,000?",
 ]
 
-# @app.post("/sms")
-# async def handle_sms(request: Request):
-#     try:
-#         # Get the message the user sent our Twilio number
-#         form_data = await request.form()
-#         user_message = form_data.get('Body', None).strip()
-#         logger.info(f"User message: {user_message}")
-
-#         result = graph.invoke(
-#             {
-#                 "messages": [
-#                     HumanMessage(content=user_message)
-#                 ]
-#             },
-#             config
-#         )
-
-#         ai_message = result["messages"][-1].content
-#         logger.info(f"AI message: {ai_message}")
-
-#         # Create Twilio response
-#         resp = MessagingResponse()
-#         resp.message(ai_message)
-        
-#         return Response(content=str(resp), media_type="text/plain")
-
-#     except Exception as e:
-#         logger.error(f"Error processing message: {str(e)}")
-#         return Response(content="An error occurred", status_code=500)
-    
 @app.post("/sms")
 async def handle_sms(request: Request):
     try:
@@ -78,8 +48,14 @@ async def handle_sms(request: Request):
 
         ai_message = result["messages"][-1].content
         logger.info(f"AI message: {ai_message}")
+
+        # Create Twilio response
+        resp = MessagingResponse()
+        resp.message(ai_message)
+        final_response = str(resp)
+        logger.info(f"Final Twilio response: {final_response}")
         
-        return Response(content=str(ai_message), media_type="text/plain")
+        return Response(content=final_response, media_type="application/xml")
 
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}")

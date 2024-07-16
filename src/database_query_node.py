@@ -11,7 +11,6 @@ def process_criteria(criteria_key, criteria_value, query, params):
 
 def query_database(state: State):
     search_criteria = state["search_criteria"]
-    print("criteria from state", search_criteria)
 
     db_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_estate_data.db")
 

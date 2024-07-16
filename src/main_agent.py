@@ -17,9 +17,11 @@ main_agent_prompt = ChatPromptTemplate.from_messages(
         (
             "system",
             "You are a helpful real estate assistant."
-            " Your primary role is to identify customer's intent"
-            " and delegate the task to the appropriate specialized assistant by invoking the corresponding tool"
-            " The user is not aware of the different specialized assistants, so do not mention them; just quietly delegate through function calls. "
+            " Your primary role is to identify user's intent,"
+            " and delegate the task to the appropriate specialized assistant,"
+            " then answer the user based on information provided by pecialized assistant."
+            " The user is not aware of other assistants, so do not mention them."
+            
         ),
         ("placeholder", "{messages}"),
     ]
