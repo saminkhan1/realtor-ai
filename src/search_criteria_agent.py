@@ -4,6 +4,7 @@ from langchain_openai import ChatOpenAI
 from src.util import State
 from dotenv import load_dotenv
 from typing import Optional
+import json
 
 from langchain_core.pydantic_v1 import BaseModel
 
@@ -69,7 +70,8 @@ def search_criteria_agent(state: State) -> Dict[str, Any]:
 
     # Extract the new search criteria from the response
     # Note: In a real implementation, you'd want to add error handling here
-    new_search_criteria = eval(response.content)
+    # new_search_criteria = eval(response.content)
+    new_search_criteria = json.loads(response.content)
     print("new search criteria", new_search_criteria)
     # Generate a response message
     response = "I've updated your search criteria based on your request. Here's what I understood:\n"
