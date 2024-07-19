@@ -4,176 +4,64 @@ import sqlite3
 import os
 
 
-def process_criteria(criteria_key, criteria_value, query, params):
-    query += f" AND {criteria_key} = ?"
-    params.append(criteria_value)
-    return (query, params)
-
-def query_database(state: State):
-    search_criteria = state["search_criteria"]
-
-    db_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_estate_data.db")
-
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    city = search_criteria.get("city", None)
-    state = search_criteria.get("state", None)
-    min_bedroom = search_criteria.get("min_bedroom", None)
-    min_bathroom = search_criteria.get("min_bathroom", None)
-    max_price = search_criteria.get("max_price", None)
-    min_price = search_criteria.get("min_price", None)
-
-    query = "SELECT * FROM real_estate WHERE 1 = 1"
+def build_query(search_criteria):
+    """Builds a SQL query based on the search criteria."""
+    query = "SELECT * FROM real_estate WHERE 1=1"
     params = []
 
-    if city:
-        query += " AND city = ?"
-        params.append(city)    
-
-    if state:
-        query += " AND state = ?"
-        params.append(state)
-
-    if min_bedroom is not None:
-        query += " AND bed >= ?"
-        params.append(min_bedroom)
-    
-    if min_bathroom is not None:
-        query += " AND bath >= ?"
-        params.append(min_bathroom)
-    
-    if max_price is not None:
-        query += " AND price <= ?"
-        params.append(max_price)
-
-    if min_price is not None:
-        query += " AND price >= ?"
-        params.append(min_price)
-
-    query += " LIMIT 3"
-    
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    column_names = [column[0] for column in cursor.description]
-    results = [dict(zip(column_names, row)) for row in rows]
-
-    cursor.close()
-    conn.close()
-
-    return {
-        "messages": [
-            AIMessage(
-                content=f"Here are the search results: {results}"
-            )
-        ]
+    # Define valid criteria keys and their corresponding SQL column names
+    valid_criteria = {
+        "city": "city",
+        "state": "state",
+        "min_bedroom": "bed",
+        "min_bathroom": "bath",
+        "max_price": "price",
+        "min_price": "price",
     }
 
-# @tool
-# def search_real_estate(
-#     brokered_by: Optional[str] = None,
-#     status: Optional[str] = None,
-#     price_min: Optional[float] = None,
-#     price_max: Optional[float] = None,
-#     bed_min: Optional[int] = None,
-#     bed_max: Optional[int] = None,
-#     bath_min: Optional[int] = None,
-#     bath_max: Optional[int] = None,
-#     acre_lot_min: Optional[float] = None,
-#     acre_lot_max: Optional[float] = None,
-#     street: Optional[str] = None,
-#     city: Optional[str] = None,
-#     state: Optional[str] = None,
-#     zip_code: Optional[str] = None,
-#     house_size_min: Optional[float] = None,
-#     house_size_max: Optional[float] = None,
-#     prev_sold_date: Optional[str] = None,
-#     limit: int = 3,
-# ) -> list[dict]:
-#     """Search for real estate properties based on various criteria."""
-#     conn = sqlite3.connect(db_path)
-#     cursor = conn.cursor()
+    for key, value in search_criteria.items():
+        if value is not None:
+            sql_column = valid_criteria.get(key)
+            if sql_column:
+                if key in ["min_bedroom", "min_bathroom"]:
+                    query += f" AND {sql_column} >= ?"
+                elif key in ["max_price", "min_price"]:
+                    operator = "<=" if "max" in key else ">="
+                    query += f" AND {sql_column} {operator} ?"
+                else:
+                    query += f" AND {sql_column} = ?"
+                params.append(value)
+            else:
+                # Handle unexpected criteria keys
+                print(f"Unexpected criteria key: {key}")
 
-#     query = "SELECT * FROM real_estate WHERE 1 = 1"
-#     params = []
+    query += " LIMIT 3"
+    return query, params
 
-#     if brokered_by:
-#         query += " AND brokered_by = ?"
-#         params.append(brokered_by)
 
-#     if status:
-#         query += " AND status = ?"
-#         params.append(status)
+def query_database(state: State):
+    """Queries the database with the given search criteria."""
+    search_criteria = state.get("search_criteria", {})
 
-#     if price_min is not None:
-#         query += " AND price >= ?"
-#         params.append(price_min)
+    db_path = os.path.join(
+        os.path.dirname(__file__), "..", "data", "real_estate_data.db"
+    )
 
-#     if price_max is not None:
-#         query += " AND price <= ?"
-#         params.append(price_max)
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
 
-#     if bed_min is not None:
-#         query += " AND bed >= ?"
-#         params.append(bed_min)
+        query, params = build_query(search_criteria)
 
-#     if bed_max is not None:
-#         query += " AND bed <= ?"
-#         params.append(bed_max)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        column_names = [column[0] for column in cursor.description]
+        results = [dict(zip(column_names, row)) for row in rows]
 
-#     if bath_min is not None:
-#         query += " AND bath >= ?"
-#         params.append(bath_min)
+    except sqlite3.Error as e:
+        results = {"error": str(e)}
+    finally:
+        cursor.close()
+        conn.close()
 
-#     if bath_max is not None:
-#         query += " AND bath <= ?"
-#         params.append(bath_max)
-
-#     if acre_lot_min is not None:
-#         query += " AND acre_lot >= ?"
-#         params.append(acre_lot_min)
-
-#     if acre_lot_max is not None:
-#         query += " AND acre_lot <= ?"
-#         params.append(acre_lot_max)
-
-#     if street:
-#         query += " AND street = ?"
-#         params.append(street)
-
-#     if city:
-#         query += " AND city = ?"
-#         params.append(city)
-
-#     if state:
-#         query += " AND state = ?"
-#         params.append(state)
-
-#     if zip_code:
-#         query += " AND zip_code = ?"
-#         params.append(zip_code)
-
-#     if house_size_min is not None:
-#         query += " AND house_size >= ?"
-#         params.append(house_size_min)
-
-#     if house_size_max is not None:
-#         query += " AND house_size <= ?"
-#         params.append(house_size_max)
-
-#     if prev_sold_date:
-#         query += " AND prev_sold_date = ?"
-#         params.append(prev_sold_date)
-
-#     query += " LIMIT ?"
-#     params.append(limit)
-
-#     cursor.execute(query, params)
-#     rows = cursor.fetchall()
-#     column_names = [column[0] for column in cursor.description]
-#     results = [dict(zip(column_names, row)) for row in rows]
-
-#     cursor.close()
-#     conn.close()
-
-#     return results
+    return {"messages": [AIMessage(content=f"Here are the search results: {results}")]}
