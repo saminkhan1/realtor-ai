@@ -1,7 +1,8 @@
-from langchain_core.messages import AIMessage
-from src.util import State
 import sqlite3
 import os
+from langchain_core.messages import AIMessage
+from src.util import State
+
 
 
 def build_query(search_criteria):
@@ -40,9 +41,7 @@ def build_query(search_criteria):
 
 
 def query_database(state: State):
-    """Queries the database with the given search criteria."""
     search_criteria = state.get("search_criteria", {})
-
     db_path = os.path.join(
         os.path.dirname(__file__), "..", "data", "real_estate_data.db"
     )
@@ -50,14 +49,11 @@ def query_database(state: State):
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-
         query, params = build_query(search_criteria)
-
         cursor.execute(query, params)
         rows = cursor.fetchall()
         column_names = [column[0] for column in cursor.description]
         results = [dict(zip(column_names, row)) for row in rows]
-
     except sqlite3.Error as e:
         results = {"error": str(e)}
     finally:

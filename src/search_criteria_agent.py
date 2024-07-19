@@ -48,15 +48,14 @@ You are an AI assistant for a real estate search application. Your task is to in
 """
 
 
+
+
 def search_criteria_agent(state: State) -> Dict[str, Any]:
-    """Interprets user queries about property searches and generates search criteria."""
     last_tool_call = state["messages"][-1].tool_calls[0]
     tool_call_id = last_tool_call["id"]
     user_query = last_tool_call["args"]["request"]
 
     current_criteria = state.get("search_criteria", {})
-
-    # Prepare the messages for the ChatOpenAI model
     messages = [
         {"role": "system", "content": SYSTEM_MESSAGE},
         {
@@ -66,30 +65,24 @@ def search_criteria_agent(state: State) -> Dict[str, Any]:
         {"role": "user", "content": f"User Query: {user_query}"},
     ]
 
-    # Get the response from the model
     response = model.invoke(messages)
     response_content = response.content.strip()
 
-    # Initialize new_search_criteria
-    new_search_criteria = {"search_criteria": {}}
-
     try:
-        # Extract the new search criteria from the response
         new_search_criteria = json.loads(response_content)
-    except json.JSONDecodeError as e:
-        # Handle JSON parsing errors
+        if "search_criteria" not in new_search_criteria:
+            raise ValueError("Missing 'search_criteria' key in response.")
+    except (json.JSONDecodeError, ValueError) as e:
         return {
             "search_criteria": current_criteria,
             "messages": [
                 ToolMessage(
-                    content="Entering search criteria agent",
-                    tool_call_id=tool_call_id,
+                    content="Entering search criteria agent", tool_call_id=tool_call_id
                 ),
                 AIMessage(content=f"Failed to parse search criteria. Error: {e}"),
             ],
         }
 
-    # Construct the response message
     response_message = "I've updated your search criteria based on your request. Here's what I understood:\n"
     criteria = new_search_criteria.get("search_criteria", {})
     for key, value in criteria.items():
@@ -100,13 +93,11 @@ def search_criteria_agent(state: State) -> Dict[str, Any]:
         "\nIs there anything else you'd like to modify or add to your search?"
     )
 
-    # Return the updated state
     return {
         "search_criteria": new_search_criteria["search_criteria"],
         "messages": [
             ToolMessage(
-                content="Entering search criteria agent",
-                tool_call_id=tool_call_id,
+                content="Entering search criteria agent", tool_call_id=tool_call_id
             ),
             AIMessage(content=response_message),
         ],

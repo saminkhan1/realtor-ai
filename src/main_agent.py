@@ -10,7 +10,7 @@ from src.util import State
 
 load_dotenv()
 
-llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
+llm = ChatOpenAI(model="gpt-4o-mini")
 
 main_agent_prompt = ChatPromptTemplate.from_messages(
     [
