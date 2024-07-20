@@ -6,26 +6,13 @@ import sqlite3
 import os
 
 
-def process_criteria(criteria_key, criteria_value, query, params):
-    query += f" AND {criteria_key} = ?"
-    params.append(criteria_value)
-    return (query, params)
-
 def query_database(state: State):
     search_criteria = state["search_criteria"]
-    print("search criteria from state", search_criteria)
 
     db_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_estate_data.db")
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
-    city = search_criteria.get("city", None)
-    state = search_criteria.get("state", None)
-    min_bedroom = search_criteria.get("min_bedroom", None)
-    min_bathroom = search_criteria.get("min_bathroom", None)
-    max_price = search_criteria.get("max_price", None)
-    min_price = search_criteria.get("min_price", None)
 
     query = "SELECT * FROM real_estate WHERE 1 = 1"
     params = []

@@ -84,7 +84,7 @@ def search_criteria_agent(state: State) -> Dict[str, Any]:
             ],
         }
 
-    response_message = "I've updated your search criteria based on your request. Here's what I understood:\n"
+    response_message = "I've updated your search criteria based on your request:\n"
     criteria = new_search_criteria.get("search_criteria", {})
     for key, value in criteria.items():
         if value is not None:

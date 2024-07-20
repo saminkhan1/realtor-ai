@@ -12,7 +12,7 @@ load_dotenv()
 
 llm = ChatOpenAI(
     model="gpt-4o-mini",
-    temperature=0.9
+    temperature=0.8
 )
 
 system_message = """
@@ -21,6 +21,7 @@ system_message = """
     Guidelines:
     - Try to answer the user's question yourself. If you cannot, then use the most appropriate tool to help you.
     - Only use complete sentences, because you are speaking with a customer on the phone. Don't simply list real estate data, use sentences to describe them.
+    - Your responses should be concise.
     - Do not mention delegating tasks to specialized assistants.
 
     Example conversation:
@@ -30,6 +31,7 @@ system_message = """
     - Customer: I can afford up to 1 million dollars. And I would like to have at least 3 bedrooms and 2 bathrooms.
     - Agent: Let me look into this for you. One moment please. I found some suitable options for you. The first one is a 3-bed, 2-bath house in the Floral Park neighborhood of Queens with a price of $850,900. There's another one in a similar location with 4 bedrooms and 2 bathrooms. The price is slightly higher, at $900,000. Would you like more details on any of these listings?
 """
+
 
 main_agent_prompt = ChatPromptTemplate.from_messages(
     [
