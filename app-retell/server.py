@@ -2,6 +2,7 @@ import json
 import os
 import asyncio
 import uuid
+import sys
 import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Response
@@ -13,13 +14,22 @@ from langchain_core.messages import HumanMessage
 from retell import Retell
 from retell.resources.call import RegisterCallResponse
 
-from src.graph import create_graph
 from .custom_types import (
     ConfigResponse,
     ResponseRequiredRequest,
 )
 from .twilio_server import TwilioClient
 from .llm import LlmClient  # or use .llm_with_func_calling
+
+current_dir = os.path.dirname(__file__)
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+
+from src.graph import create_graph
+
 
 # ngrok http --domain=oyster-ace-sturgeon.ngrok-free.app 8000
 
@@ -31,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 graph = create_graph()
 thread_id = str(uuid.uuid4())
-# Example usage of the graph
+
 config = {
     "configurable": {
         "thread_id": thread_id,
