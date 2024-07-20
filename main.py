@@ -32,6 +32,7 @@ from src.graph import create_graph
 #                 event["messages"][-1].pretty_print()
 
 def main():
+    """Main function to run the graph."""
     graph = create_graph()
     thread_id = str(uuid.uuid4())
     config = {
@@ -41,24 +42,16 @@ def main():
         }
     }
 
-    # Generate and display the greeting
-    # greeting_prompt = "You are a realtor. Greet your customer."
-    # greeting_events = graph.stream(
-    #     {"messages": ("user", greeting_prompt)}, config, stream_mode="values"
-    # )
-    
-    # for event in greeting_events:
-    #     if "messages" in event:
-    #         event["messages"][-1].pretty_print()
+    questions = [
+        "What properties are available in New York?",
+        "Show me houses with at least 3 bedrooms and 2 bathrooms.",
+        "Do you have any properties under $500,000?",
+        "What properties are available in the suburbs of Atlanta?",
+    ]
 
-    while True:
-        question = input("Enter your question: ")
-        
-        if question.lower() == 'exit':
-            break
-
+    for question in questions:
         events = graph.stream(
-            {"messages": ("user", question)}, config, stream_mode="values"
+            {"messages": ("user", question)}, config=config, stream_mode="values"
         )
 
         for event in events:
