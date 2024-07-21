@@ -4,3 +4,4 @@ data/real_estate_data.db
 
 __pycache__
 __init__.py
+venv/
