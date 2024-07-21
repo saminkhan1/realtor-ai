@@ -1,12 +1,10 @@
 from typing import Annotated, Optional
 from typing_extensions import TypedDict
-from langgraph.graph.message import add_messages
-from langchain_core.messages.utils import AnyMessage  # Updated import
+from langgraph.graph.message import AnyMessage, add_messages
 
 
 # Define the SearchCriteria schema
 class SearchCriteria(TypedDict):
-    """Stores search criteria for a real estate search."""
     city: Optional[str]
     state: Optional[str]
     bedrooms: Optional[int]
@@ -27,3 +25,4 @@ def update_search_criteria(
 class State(TypedDict):
     search_criteria: Annotated[SearchCriteria, update_search_criteria]
     messages: Annotated[list[AnyMessage], add_messages]
+
