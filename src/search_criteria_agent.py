@@ -4,14 +4,12 @@ from langchain_openai import ChatOpenAI
 from src.util import State
 from dotenv import load_dotenv
 from typing import Optional
-
+import json
 from langchain_core.pydantic_v1 import BaseModel
-
 
 load_dotenv()
 # Create a ChatOpenAI instance
-model = ChatOpenAI(model="gpt-3.5-turbo-0125")
-
+model = ChatOpenAI(model="gpt-4o-mini")
 
 class SearchCriteriaObject(BaseModel):
     city: Optional[str]
@@ -50,42 +48,57 @@ You are an AI assistant for a real estate search application. Your task is to in
 """
 
 
+
+
 def search_criteria_agent(state: State) -> Dict[str, Any]:
     last_tool_call = state["messages"][-1].tool_calls[0]
     tool_call_id = last_tool_call["id"]
     user_query = last_tool_call["args"]["request"]
 
     current_criteria = state.get("search_criteria", {})
-
-    # Prepare the messages for the ChatOpenAI model
     messages = [
         {"role": "system", "content": SYSTEM_MESSAGE},
-        {"role": "user", "content": f"Current Criteria: {current_criteria}"},
+        {
+            "role": "user",
+            "content": f"Current Criteria: {json.dumps(current_criteria, indent=2)}",
+        },
         {"role": "user", "content": f"User Query: {user_query}"},
     ]
 
-    # Get the response from the model
     response = model.invoke(messages)
+    response_content = response.content.strip()
 
-    # Extract the new search criteria from the response
-    # Note: In a real implementation, you'd want to add error handling here
-    new_search_criteria = eval(response.content)
-    # Generate a response message
-    response = "I've updated your search criteria based on your request. Here's what I understood:\n"
-    for key, value in new_search_criteria.items():
+    try:
+        new_search_criteria = json.loads(response_content)
+        if "search_criteria" not in new_search_criteria:
+            raise ValueError("Missing 'search_criteria' key in response.")
+    except (json.JSONDecodeError, ValueError) as e:
+        return {
+            "search_criteria": current_criteria,
+            "messages": [
+                ToolMessage(
+                    content="Entering search criteria agent", tool_call_id=tool_call_id
+                ),
+                AIMessage(content=f"Failed to parse search criteria. Error: {e}"),
+            ],
+        }
+
+    response_message = "I've updated your search criteria based on your request. Here's what I understood:\n"
+    criteria = new_search_criteria.get("search_criteria", {})
+    for key, value in criteria.items():
         if value is not None:
-            response += f"- {key.replace('_', ' ').capitalize()}: {value}\n"
+            response_message += f"- {key.replace('_', ' ').capitalize()}: {value}\n"
 
-    response += "\nIs there anything else you'd like to modify or add to your search?"
+    response_message += (
+        "\nIs there anything else you'd like to modify or add to your search?"
+    )
 
-    # Return the updated state
     return {
         "search_criteria": new_search_criteria["search_criteria"],
         "messages": [
             ToolMessage(
-                    content="Entering search criteria agent",
-                    tool_call_id=tool_call_id,
-                ),
-            AIMessage(content=response)
+                content="Entering search criteria agent", tool_call_id=tool_call_id
+            ),
+            AIMessage(content=response_message),
         ],
     }
