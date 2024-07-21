@@ -1,7 +1,7 @@
-from typing import Annotated, Optional, Callable
+from typing import Annotated, Optional
 from typing_extensions import TypedDict
-from langgraph.graph.message import AnyMessage, add_messages
-from langchain_core.messages import ToolMessage
+from langgraph.graph.message import add_messages
+from langchain_core.messages import AnyMessage
 from langchain_core.runnables import Runnable, RunnableConfig
 
 
@@ -80,17 +80,3 @@ class Assistant:
         return {"messages": result}
 
 
-# def create_entry_node(assistant_name: str) -> Callable:
-#     def entry_node(state: State) -> dict:
-#         tool_call_id = state["messages"][-1].tool_calls[0]["id"]
-#         return {
-#             "messages": [
-#                 ToolMessage(
-#                     content=f"Entering speciallized {assistant_name}",
-#                     # " Do not mention who you are. Act only as the proxy assistant.",
-#                     tool_call_id=tool_call_id,
-#                 )
-#             ]
-#         }
-    
-#     return entry_node
