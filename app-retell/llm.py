@@ -8,8 +8,7 @@ from .custom_types import (
     Utterance,
 )
 
-# begin_sentence = "Hey there, I'm an AI real estate assistant. How can I help you?"
-begin_sentence = "Hi, how can I help you?"
+begin_sentence = "Hey there, I'm an AI real estate assistant. How can I help you?"
 
 class LlmClient:
     def __init__(self, graph, graph_config):
