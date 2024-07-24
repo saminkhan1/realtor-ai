@@ -1,44 +1,36 @@
-from openai import AsyncOpenAI
-import os
-import uuid
-from typing import List
-from .custom_types import (
-    ResponseRequiredRequest,
-    ResponseResponse,
-    Utterance,
-)
+from typing import List, AsyncGenerator
+from .custom_types import ResponseRequiredRequest, ResponseResponse, Utterance
 
-begin_sentence = "Hey there, I'm an AI real estate assistant. How can I help you?"
+
+BEGIN_SENTENCE = "Hey there, I'm an AI real estate assistant. How can I help you?"
+
 
 class LlmClient:
     def __init__(self, graph, graph_config):
         self.graph = graph
         self.graph_config = graph_config
 
-    def draft_begin_message(self):
-        response = ResponseResponse(
+    def draft_begin_message(self) -> ResponseResponse:
+        """Generate the initial message for the conversation."""
+        return ResponseResponse(
             response_id=0,
-            content=begin_sentence,
+            content=BEGIN_SENTENCE,
             content_complete=True,
             end_call=False,
         )
-        return response
 
-    def convert_transcript_to_openai_messages(self, transcript: List[Utterance]):
-        messages = []
+    @staticmethod
+    def _convert_transcript_to_messages(transcript: List[Utterance]) -> List[dict]:
+        """Convert the last utterance in the transcript to a message format."""
         utterance = transcript[-1]
-        if utterance.role == "agent":
-            messages.append({"role": "assistant", "content": utterance.content})
-        else:
-            messages.append({"role": "user", "content": utterance.content})
-        print(messages)
-        return messages
+        role = "assistant" if utterance.role == "agent" else "user"
+        return [{"role": role, "content": utterance.content}]
 
-    def prepare_prompt(self, request: ResponseRequiredRequest):
+
+    def _prepare_prompt(self, request: ResponseRequiredRequest):
         prompt = []
-        transcript_messages = self.convert_transcript_to_openai_messages(
-            request.transcript
-        )
+        transcript_messages = self._convert_transcript_to_messages(request.transcript)
+
         for message in transcript_messages:
             prompt.append(message)
 
@@ -51,26 +43,25 @@ class LlmClient:
             )
         return prompt
 
-    async def draft_response(self, request: ResponseRequiredRequest):
-        prompt = self.prepare_prompt(request)
-        result = self.graph.invoke(
-            {"messages": prompt},
-            self.graph_config
-        )
+    async def draft_response(self, request: ResponseRequiredRequest) -> AsyncGenerator[ResponseResponse, None]:
+        """Generate a draft response based on the request."""
+        prompt = self._prepare_prompt(request)
+        result = self.graph.invoke({"messages": prompt}, self.graph_config)
 
-        response = ResponseResponse(
+        last_message_content = result["messages"][-1].content
+
+        # Yield the intermediate response
+        yield ResponseResponse(
             response_id=request.response_id,
-            content=result["messages"][-1].content,
+            content=last_message_content,
             content_complete=False,
             end_call=False,
         )
-        yield response
 
-        # Send final response with "content_complete" set to True to signal completion
-        response = ResponseResponse(
+        # Yield the final response to indicate completion
+        yield ResponseResponse(
             response_id=request.response_id,
             content="",
             content_complete=True,
             end_call=False,
         )
-        yield response
