@@ -40,7 +40,6 @@ main_agent_prompt = ChatPromptTemplate.from_messages(
     ]
 ).partial(time=datetime.now())
 
-
 class ToSearchAssistant(BaseModel):
     """Transfers work to a specialized assistant to search for real estates."""
 
@@ -48,11 +47,14 @@ class ToSearchAssistant(BaseModel):
         description="Any additional information or requests from the user regarding their search criteria."
     )
 
+main_agent_runnable = main_agent_prompt | llm.bind_tools(
+    [ToSearchAssistant]
+)
 
-main_agent_runnable = main_agent_prompt | llm.bind_tools([ToSearchAssistant])
-
-
-def route_main_agent(state: State) -> Literal["__end__", "search_criteria_agent"]:
+def route_main_agent(state: State) -> Literal[
+    "__end__",
+    "search_criteria_agent"
+]:
     route = tools_condition(state)
     if route == "__end__":
         return "__end__"
@@ -61,3 +63,4 @@ def route_main_agent(state: State) -> Literal["__end__", "search_criteria_agent"
         if tool_calls[0]["name"] == ToSearchAssistant.__name__:
             return "search_criteria_agent"
     raise ValueError("Invalid route")
+
