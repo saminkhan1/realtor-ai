@@ -32,7 +32,6 @@ from src.graph import create_graph
 #                 event["messages"][-1].pretty_print()
 
 def main():
-    """Main function to run the graph."""
     graph = create_graph()
     thread_id = str(uuid.uuid4())
     config = {
@@ -46,12 +45,11 @@ def main():
         "What properties are available in New York?",
         "Show me houses with at least 3 bedrooms and 2 bathrooms.",
         "Do you have any properties under $500,000?",
-        "What properties are available in the suburbs of Atlanta?",
     ]
 
     for question in questions:
         events = graph.stream(
-            {"messages": ("user", question)}, config=config, stream_mode="values"
+            {"messages": ("user", question)}, config, stream_mode="values"
         )
 
         for event in events:
