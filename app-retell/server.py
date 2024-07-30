@@ -14,6 +14,7 @@ from retell import Retell
 from retell.resources.call import RegisterCallResponse
 
 from .custom_types import ConfigResponse, ResponseRequiredRequest
+from .twilio_server import TwilioClient
 from .llm import LlmClient
 from src.graph import create_graph
 
@@ -23,6 +24,7 @@ load_dotenv(override=True)
 
 app = FastAPI()
 retell = Retell(api_key=os.environ["RETELL_API_KEY"])
+twilio_client = TwilioClient()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -52,11 +54,10 @@ async def handle_webhook(request: Request):
         if not valid_signature:
             return JSONResponse(status_code=401, content={"message": "Unauthorized"})
 
-        
         event_messages = {
             "call_started": "Call started event",
             "call_ended": "Call ended event",
-            "call_analyzed": "Call analyzed event"
+            "call_analyzed": "Call analyzed event",
         }
 
         event = post_data.get("event")
