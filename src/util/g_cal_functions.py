@@ -9,6 +9,8 @@ from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 
+from src.util.state import State
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -17,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
-
 
 def get_calendar_service(credentials: Optional[Credentials] = None) -> Any:
     """
@@ -454,4 +455,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    current_directory = os.getcwd()
+    print(current_directory)
     main()

@@ -1,12 +1,12 @@
 from typing import Dict, Any
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_openai import ChatOpenAI
-from src.util import State
 from dotenv import load_dotenv
 from typing import Optional
 import json
-
 from langchain_core.pydantic_v1 import BaseModel
+
+from src.util.state import State
 
 load_dotenv()
 # Create a ChatOpenAI instance
@@ -90,13 +90,11 @@ def search_criteria_agent(state: State) -> Dict[str, Any]:
         if value is not None:
             response_message += f"- {key.replace('_', ' ').capitalize()}: {value}\n"
 
-    # response += "\nIs there anything else you'd like to modify or add to your search?"
-
     return {
         "search_criteria": new_search_criteria["search_criteria"],
         "messages": [
             ToolMessage(
-                content="Entering search criteria agent", tool_call_id=tool_call_id
+                content="Entering search criteria agent.", tool_call_id=tool_call_id
             ),
             AIMessage(content=response_message),
         ],

@@ -1,35 +1,8 @@
 import uuid
 import os
 from dotenv import load_dotenv
+
 from src.graph import create_graph
-
-
-# def main():
-#     graph = create_graph()
-#     thread_id = str(uuid.uuid4())
-#     # Example usage of the graph
-#     config = {
-#         "configurable": {
-#             "user_id": "user_123",
-#             "thread_id": thread_id,
-#         }
-#     }
-
-#     questions = [
-#         # "What properties are available in New York?",
-#         # "Show me houses with at least 3 bedrooms and 2 bathrooms.",
-#         # "Do you have any properties under $500,000?",
-#     ]
-
-#     for question in questions:
-#         events = graph.stream(
-#             {"messages": ("user", question)}, config, stream_mode="values"
-#         )
-#         # for event in events:
-#         #     print(event)
-#         for event in events:
-#             if "messages" in event:
-#                 event["messages"][-1].pretty_print()
 
 def main():
     graph = create_graph()
@@ -42,9 +15,11 @@ def main():
     }
 
     questions = [
-        "What properties are available in New York?",
-        "Show me houses with at least 3 bedrooms and 2 bathrooms.",
-        "Do you have any properties under $500,000?",
+        "I want to book an appointment to view the apartment on Aug 11 at 10 am."
+        "Delete my appointment on Aug 11 10am."
+        # "What properties are available in New York?",
+        # "Show me houses with at least 3 bedrooms and 2 bathrooms.",
+        # "Do you have any properties under $500,000?",
     ]
 
     for question in questions:
