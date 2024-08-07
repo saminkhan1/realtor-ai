@@ -15,8 +15,8 @@ def main():
     }
 
     questions = [
-        "I want to book an appointment to view the apartment on Aug 11 at 10 am."
-        "Delete my appointment on Aug 11 10am."
+        # "I want to book an appointment to view the apartment on Aug 11 at 10 am."
+        "Change my appointment on Aug 11 to Aug 10."
         # "What properties are available in New York?",
         # "Show me houses with at least 3 bedrooms and 2 bathrooms.",
         # "Do you have any properties under $500,000?",

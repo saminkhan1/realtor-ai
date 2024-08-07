@@ -9,7 +9,8 @@ from src.util.g_cal_functions import get_calendar_service
 
 logger = logging.getLogger(__name__)
 
-calendar_id = "saminkhann1@gmail.com"
+# calendar_id = "saminkhann1@gmail.com"
+calendar_id = "lia.xin.weng@gmail.com"
 
 @tool
 def create_event(
@@ -21,7 +22,7 @@ def create_event(
     supports_attachments: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
-    Creates an event in the specified calendar.
+    Creates/adds an event.
 
     Args:
         event_body (Dict[str, Any]): The request body containing event details.
@@ -69,7 +70,7 @@ def list_events(
     time_zone: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Retrieve events from a specific calendar within a given time range.
+    Retrieve events within a given time range.
 
     Args:
         time_min (str): The start of the time range in RFC3339 format.
@@ -107,7 +108,7 @@ def delete_event(
     send_updates: str = "all"
 ) -> None:
     """
-    Deletes an event from the specified calendar.
+    Deletes an event.
 
     Args:
         event_id (str): Event identifier.
@@ -128,8 +129,74 @@ def delete_event(
         logger.error(f"An error occurred while deleting event: {error}")
         raise
 
+def get_event(
+    event_id: str,
+) -> Optional[Dict[str, Any]]:
+    """
+    Retrieves an event based on its event ID.
+
+    Args:
+        event_id (str): Event identifier.
+
+    Returns:
+        Optional[Dict[str, Any]]: Event details or None if an error occurs.
+
+    Raises:
+        HttpError: If there's an error in the API request.
+    """
+    try:
+        service = get_calendar_service()
+        request_params = {
+            "calendarId": calendar_id,
+            "eventId": event_id,
+        }
+
+        return service.events().get(**request_params).execute()
+    except HttpError as error:
+        logger.error(f"An error occurred while retrieving event: {error}")
+        raise
+
+@tool
+def update_event(
+    event_id: str,
+    updated_event_data: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Updates information of an existing event.
+
+    Args:
+        event_id (str): Event identifier.
+        updated_event_data (Dict[str, Any]): Dictionary containing the updated event data.
+
+    Returns:
+        Dict[str, Any]: Updated event details.
+
+    Raises:
+        HttpError: If there's an error in the API request.
+        ValueError: If required parameters are missing or invalid.
+    """
+    if not updated_event_data:
+        raise ValueError("updated_event_data is required")
+
+    try:
+        service = get_calendar_service()
+        event = get_event(event_id)
+
+        event.update(updated_event_data)
+        updated_event = service.events().update(
+            calendarId=calendar_id,
+            eventId=event_id,
+            body=event
+        ).execute()
+
+        return f"Appointment updated: {updated_event}"
+    except HttpError as error:
+        logger.error(f"An error occurred while updating event: {error}")
+        raise
+
 appointment_tools = [
     create_event,
     list_events,
-    delete_event
+    delete_event,
+    update_event
 ]
