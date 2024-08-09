@@ -1,16 +1,24 @@
+import os
 import logging
 from typing import List, Dict, Optional, Any
 from googleapiclient.errors import HttpError
 from langchain_core.tools import tool
+from twilio.rest import Client
 
 from src.util.state import State
 from src.util.g_cal_functions import get_calendar_service
 
+account_sid = os.environ["TWILIO_ACCOUNT_SID"]
+auth_token = os.environ["TWILIO_AUTH_TOKEN"]
+phone_number_from = os.environ["PHONE_NUMBER_FROM"]
+phone_number_to = os.environ["PHONE_NUMBER_TO"]
 
+twilio_client = Client(account_sid, auth_token)
 logger = logging.getLogger(__name__)
 
 # calendar_id = "saminkhann1@gmail.com"
 calendar_id = "lia.xin.weng@gmail.com"
+
 
 @tool
 def create_event(
@@ -25,7 +33,7 @@ def create_event(
     Creates/adds an event.
 
     Args:
-        event_body (Dict[str, Any]): The request body containing event details.
+        event_body (Dict[str, Any]): The request body containing event details. Include important information such as apartment address, appoint location, attendees.
         conference_data_version (Optional[int]): Version number of conference data supported by the API client.
         max_attendees (Optional[int]): The maximum number of attendees to include in the response.
         send_notifications (Optional[bool]): Deprecated. Please use send_updates instead.
@@ -55,13 +63,14 @@ def create_event(
             request_params["sendUpdates"] = send_updates
         if supports_attachments is not None:
             request_params["supportsAttachments"] = supports_attachments
-        
+
         service = get_calendar_service()
         event = service.events().insert(**request_params).execute()
         return f"Appointment created: {event}."
     except HttpError as error:
         logger.error(f"An error occurred while creating event: {error}")
         raise
+
 
 @tool
 def list_events(
@@ -102,11 +111,9 @@ def list_events(
         logger.error(f"An error occurred while retrieving events: {error}")
         raise
 
+
 @tool
-def delete_event(
-    event_id: str,
-    send_updates: str = "all"
-) -> None:
+def delete_event(event_id: str, send_updates: str = "all") -> None:
     """
     Deletes an event.
 
@@ -128,6 +135,7 @@ def delete_event(
     except HttpError as error:
         logger.error(f"An error occurred while deleting event: {error}")
         raise
+
 
 def get_event(
     event_id: str,
@@ -156,6 +164,7 @@ def get_event(
         logger.error(f"An error occurred while retrieving event: {error}")
         raise
 
+
 @tool
 def update_event(
     event_id: str,
@@ -183,20 +192,48 @@ def update_event(
         event = get_event(event_id)
 
         event.update(updated_event_data)
-        updated_event = service.events().update(
-            calendarId=calendar_id,
-            eventId=event_id,
-            body=event
-        ).execute()
+        updated_event = (
+            service.events()
+            .update(calendarId=calendar_id, eventId=event_id, body=event)
+            .execute()
+        )
 
         return f"Appointment updated: {updated_event}"
     except HttpError as error:
         logger.error(f"An error occurred while updating event: {error}")
         raise
 
+
+@tool
+def send_confirmation(confirmation: str) -> str:
+    """
+    Send confirmation text to the user regarding their appointment.
+
+    Args:
+        confirmation (str): Details about the appointment.
+
+    Returns:
+        str: Message indicating that the confirmation text was sent successfully.
+
+    Raises:
+        HttpError: If there's an error in the API request.
+    """
+    try:
+        twilio_client.messages.create(
+            body=confirmation,
+            from_=phone_number_from,
+            to=phone_number_to,
+        )
+        # print(confirmation)
+    except HttpError as error:
+        logger.error(f"An error occurred while sending confirmation text: {error}")
+        raise
+
+
 appointment_tools = [
     create_event,
     list_events,
     delete_event,
-    update_event
+    update_event,
+    send_confirmation,
 ]

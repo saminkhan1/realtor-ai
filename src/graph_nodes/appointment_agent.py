@@ -18,11 +18,12 @@ appointment_agent_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are a specialized assistant for handling appointments."
-            " Use the provided tools to help the user."
-            " If none of your tools are appropriate for the user's query, then"
-            " CompleteOrEscalate the dialog to the host assistant"
-            " Current time is: {time}."
+            "You are a specialized assistant for managing appointments."
+            " You can book, edit, cancel appointments on Google Calendar as requested by the user."
+            " After you have completed the task, send user a confirmation text."
+            " Use the provided tools. If none of your tools are appropriate for the user's query,"
+            " then CompleteOrEscalate the dialog to the host assistant"
+            " Current time is: {time}.",
         ),
         ("placeholder", "{messages}"),
     ]
@@ -33,11 +34,10 @@ appointment_agent_runnable = appointment_agent_prompt | llm.bind_tools(
     appointment_tools + [CompleteOrEscalate]
 )
 
-def route_appointment_agent(state: State) -> Literal[
-        "__end__",
-        "leave_specialized_agent",
-        "appointment_tools"
-    ]:
+
+def route_appointment_agent(
+    state: State,
+) -> Literal["__end__", "leave_specialized_agent", "appointment_tools"]:
     route = tools_condition(state)
     if route == "__end__":
         return "__end__"
