@@ -2,11 +2,16 @@ import os
 import logging
 from typing import List, Dict, Optional, Any
 from googleapiclient.errors import HttpError
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
 from langchain_core.tools import tool
 from twilio.rest import Client
 
 from src.util.state import State
-from src.util.g_cal_functions import get_calendar_service
+
+# from src.util.g_cal_functions import get_calendar_service
 
 account_sid = os.environ["TWILIO_ACCOUNT_SID"]
 auth_token = os.environ["TWILIO_AUTH_TOKEN"]
@@ -18,6 +23,73 @@ logger = logging.getLogger(__name__)
 
 # calendar_id = "saminkhann1@gmail.com"
 calendar_id = "lia.xin.weng@gmail.com"
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
+TIMEZONE = None
+
+
+def get_calendar_service(credentials: Optional[Credentials] = None) -> Any:
+    """
+    Create and return a Google Calendar service object.
+
+    Args:
+        credentials (Optional[Credentials]): The credentials to use for authentication.
+
+    Returns:
+        Any: A Google Calendar service object.
+
+    Raises:
+        IOError: If there's an error reading or writing credential files.
+        HttpError: If there's an error in the API request.
+        RuntimeError: For other unexpected errors.
+    """
+    try:
+        if not credentials:
+            if os.path.exists("token.json"):
+                try:
+                    credentials = Credentials.from_authorized_user_file(
+                        "token.json", SCOPES
+                    )
+                except IOError as e:
+                    raise IOError(f"Error reading token file: {str(e)}")
+
+            if not credentials or not credentials.valid:
+                if credentials and credentials.expired and credentials.refresh_token:
+                    try:
+                        credentials.refresh(Request())
+                    except HttpError as e:
+                        raise HttpError(f"Error refreshing credentials: {str(e)}")
+                else:
+                    try:
+                        flow = InstalledAppFlow.from_client_secrets_file(
+                            "credentials.json", SCOPES
+                        )
+                        credentials = flow.run_local_server(port=8080)
+                        with open("token.json", "w") as token_file:
+                            token_file.write(credentials.to_json())
+                    except IOError as e:
+                        raise IOError(f"Error writing token file: {str(e)}")
+                    except HttpError as e:
+                        raise HttpError(f"Error in authorization flow: {str(e)}")
+
+        service = build("calendar", "v3", credentials=credentials)
+
+        global TIMEZONE
+        TIMEZONE = get_user_timezone(service)
+        print(f"z: {TIMEZONE}")
+
+        return service
+    except Exception as e:
+        raise RuntimeError(f"Unexpected error creating Calendar service: {str(e)}")
+
+
+def get_user_timezone(service):
+    try:
+        timezone_setting = service.settings().get(setting="timezone").execute()
+        print(f"user's timezone: {timezone_setting.get("value")}")
+        return timezone_setting.get("value")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 
 @tool
@@ -33,7 +105,7 @@ def create_event(
     Creates/adds an event.
 
     Args:
-        event_body (Dict[str, Any]): The request body containing event details. Include important information such as apartment address, appoint location, attendees.
+        event_body (Dict[str, Any]): The request body containing event details. Include important information such as user's time zone apartment address, appointment location, attendees.
         conference_data_version (Optional[int]): Version number of conference data supported by the API client.
         max_attendees (Optional[int]): The maximum number of attendees to include in the response.
         send_notifications (Optional[bool]): Deprecated. Please use send_updates instead.
@@ -48,11 +120,20 @@ def create_event(
         ValueError: If required parameters are missing or invalid.
     """
 
+    global TIMEZONE
+
     if not event_body:
         raise ValueError("event_body is required")
 
     try:
+        service = get_calendar_service()
+
+        if TIMEZONE:
+            event_body["start"]["timeZone"] = TIMEZONE
+            event_body["end"]["timeZone"] = TIMEZONE
+
         request_params = {"calendarId": calendar_id, "body": event_body}
+
         if conference_data_version is not None:
             request_params["conferenceDataVersion"] = conference_data_version
         if max_attendees is not None:
@@ -64,7 +145,7 @@ def create_event(
         if supports_attachments is not None:
             request_params["supportsAttachments"] = supports_attachments
 
-        service = get_calendar_service()
+        
         event = service.events().insert(**request_params).execute()
         return f"Appointment created: {event}."
     except HttpError as error:
@@ -76,7 +157,6 @@ def create_event(
 def list_events(
     time_min: str,
     time_max: str,
-    time_zone: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """
     Retrieve events within a given time range.
@@ -84,7 +164,6 @@ def list_events(
     Args:
         time_min (str): The start of the time range in RFC3339 format.
         time_max (str): The end of the time range in RFC3339 format.
-        time_zone (Optional[str]): The time zone to use in the response. Defaults to 'UTC'.
 
     Returns:
         List[Dict[str, Any]]: A list of events within the specified time range.
@@ -92,6 +171,8 @@ def list_events(
     Raises:
         HttpError: If there's an error in the API request.
     """
+    global TIMEZONE
+
     try:
         service = get_calendar_service()
         events = (
@@ -100,7 +181,7 @@ def list_events(
                 calendarId=calendar_id,
                 timeMin=time_min,
                 timeMax=time_max,
-                timeZone=time_zone,
+                timeZone=TIMEZONE,
                 singleEvents=True,
                 orderBy="startTime",
             )
@@ -219,12 +300,12 @@ def send_confirmation(confirmation: str) -> str:
         HttpError: If there's an error in the API request.
     """
     try:
-        twilio_client.messages.create(
-            body=confirmation,
-            from_=phone_number_from,
-            to=phone_number_to,
-        )
-        # print(confirmation)
+        # twilio_client.messages.create(
+        #     body=confirmation,
+        #     from_=phone_number_from,
+        #     to=phone_number_to,
+        # )
+        print(confirmation)
     except HttpError as error:
         logger.error(f"An error occurred while sending confirmation text: {error}")
         raise
