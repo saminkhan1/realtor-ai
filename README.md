@@ -39,8 +39,10 @@
    - use `csv_to_sql.py` and run the file to convert csv to sql database
 
 5. **Run the main application:**
+
+   run ngrok.exe file, then on terminal run
    ```bash
-   python main.py
+   uvicorn app-retell.server:app --reload
    ```
 
 ## Description

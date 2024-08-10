@@ -14,6 +14,7 @@ from retell import Retell
 from retell.resources.call import RegisterCallResponse
 
 from .custom_types import ConfigResponse, ResponseRequiredRequest
+from .twilio_server import TwilioClient
 from .llm import LlmClient
 from .twilio_server import TwilioClient
 from src.graph import create_graph
@@ -40,9 +41,6 @@ config = {
 @app.get("/")
 async def main_route() -> str:
     return "Hello World! I'm a Real Estate Assistant"
-
-
-
 
 # Twilio voice webhook. This will be called whenever there is an incoming or outgoing call.
 # Register call with Retell at this stage and pass in returned call_id to Retell.
