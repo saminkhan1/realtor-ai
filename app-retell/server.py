@@ -16,6 +16,7 @@ from retell.resources.call import RegisterCallResponse
 from .custom_types import ConfigResponse, ResponseRequiredRequest
 from .twilio_server import TwilioClient
 from .llm import LlmClient
+from .twilio_server import TwilioClient
 from src.graph import create_graph
 
 load_dotenv(override=True)
@@ -40,38 +41,6 @@ config = {
 @app.get("/")
 async def main_route() -> str:
     return "Hello World! I'm a Real Estate Assistant"
-
-
-@app.post("/webhook")
-async def handle_webhook(request: Request):
-    try:
-        post_data = await request.json()
-        valid_signature = retell.verify(
-            json.dumps(post_data, separators=(",", ":")),
-            api_key=str(os.environ["RETELL_API_KEY"]),
-            signature=str(request.headers.get("X-Retell-Signature")),
-        )
-        if not valid_signature:
-            return JSONResponse(status_code=401, content={"message": "Unauthorized"})
-
-        event_messages = {
-            "call_started": "Call started event",
-            "call_ended": "Call ended event",
-            "call_analyzed": "Call analyzed event",
-        }
-
-        event = post_data.get("event")
-        call_id = post_data["data"].get("call_id")
-
-        print(event_messages.get(event, "Unknown event"), call_id or event)
-        return JSONResponse(status_code=200, content={"received": True})
-
-    except Exception as err:
-        print(f"Error in webhook: {err}")
-        return JSONResponse(
-            status_code=500, content={"message": "Internal Server Error"}
-        )
-
 
 # Twilio voice webhook. This will be called whenever there is an incoming or outgoing call.
 # Register call with Retell at this stage and pass in returned call_id to Retell.
@@ -111,6 +80,38 @@ async def handle_twilio_voice_webhook(request: Request, agent_id_path: str):
             status_code=500, content={"message": "Internal Server Error"}
         )
 
+# Handle webhook from Retell server. This is used to receive events from Retell server.
+# Including call_started, call_ended, call_analyzed
+@app.post("/webhook")
+async def handle_webhook(request: Request):
+    try:
+        post_data = await request.json()
+        valid_signature = retell.verify(
+            json.dumps(post_data, separators=(",", ":")),
+            api_key=str(os.environ["RETELL_API_KEY"]),
+            signature=str(request.headers.get("X-Retell-Signature")),
+        )
+        if not valid_signature:
+            return JSONResponse(status_code=401, content={"message": "Unauthorized"})
+
+        
+        event_messages = {
+            "call_started": "Call started event",
+            "call_ended": "Call ended event",
+            "call_analyzed": "Call analyzed event"
+        }
+
+        event = post_data.get("event")
+        call_id = post_data["data"].get("call_id")
+
+        print(event_messages.get(event, "Unknown event"), call_id or event)
+        return JSONResponse(status_code=200, content={"received": True})
+
+    except Exception as err:
+        print(f"Error in webhook: {err}")
+        return JSONResponse(
+            status_code=500, content={"message": "Internal Server Error"}
+        )
 
 # Start a websocket server to exchange text input and output with Retell server. Retell server
 # will send over transcriptions and other information. This server here will be responsible for
