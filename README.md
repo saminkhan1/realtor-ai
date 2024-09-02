@@ -1,70 +1,81 @@
 # Real Estate Assistant
 
-## Project Structure
 
-- `data/`: Directory for database files.
-- `scripts/`: Directory for SQL scripts and other utility scripts.
-- `src/`: Directory for the main source code of the project.
-- `main.py`: The entry point of the application.
-- `requirements.txt`: Lists the Python dependencies required for the project.
-- `README.md`: Documentation for the project.
+Welcome to the AI Agent for Real Estate Professionals. This application is designed to streamline real estate operations, enhancing efficiency through automated communication and task management. The AI agent handles inquiries, schedules appointments, and interacts with clients across multiple platforms, making it an invaluable tool for real estate agents and agencies.
 
-## Setup
+## Key Features
 
-1. **Create a virtual environment and activate it:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
+1. **Property Information Inquiry**  
+   - Provides detailed property information, including square footage, pricing, condition, and amenities. This ensures potential buyers receive accurate and prompt responses.
 
-2. **Install the dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+2. **Appointment Scheduling**  
+   - Integrates with Google Calendar to facilitate the scheduling of property viewings and consultations, allowing clients to book appointments without manual coordination.
 
-3. **Set up environment variables:**
-   - Create a `.env` file in the root directory of the project.
-   - Add the following environment variables to the `.env` file:
-     ```
-     LANGCHAIN_API_KEY=
-     LANGCHAIN_API_KEY=
-     LANGCHAIN_TRACING_V2=true
-     LANGCHAIN_PROJECT=Real Estate Assistant Project
-     ```
-   - Replace the empty values with your API keys obtained from the respective services.
-   - Ensure that the `.env` file is included in the project's `.gitignore` to prevent sensitive information from being committed to version control.
+3. **Multi-Platform Access**  
+   - Accessible through terminal, text messaging, and phone calls, ensuring real-time communication with clients across various channels.
 
-4. **Download and setup data**
-   - download csv file of realestate data from https://www.kaggle.com/datasets/ahmedshahriarsakib/usa-real-estate-dataset to `/data` folder
-   - use `csv_to_sql.py` and run the file to convert csv to sql database
+4. **24/7 Availability**  
+   - Operates around the clock, ensuring no inquiries go unanswered, reducing missed opportunities, and enhancing client satisfaction.
 
-5. **Run the main application:**
 
-   run ngrok.exe file, then on terminal run
-   ```bash
-   uvicorn app-retell.server:app --reload
-   ```
+## Application Workflow
 
-## Description
+![AI agents graph](graph.png)
 
-This project implements a real estate assistant that helps users search for properties based on various criteria. The assistant is built using Python and leverages natural language processing (NLP) techniques to understand user queries and provide relevant responses.
+1. **Initialization**  
+   - The application starts at the `__start__` node, initiating the AI agent.
 
-The main components of the project include:
-- **Database Management:** The `data/` directory contains SQLite database files (`real_estate_data.db` and `realtor-data.csv`) to store real estate property data.
-- **Tools:** The `tools/` directory holds AI agent tools like `search_real_estate` in `real_estate_tool.py` for property search functionality.
-- **Source Code:** The `src/` directory contains the main source code of the project, including the agent logic (`agent.py`), state management (`state.py`), graph definition (`graph.py`), and initialization (`__init__.py`).
-- **Entry Point:** The `main.py` file serves as the entry point of the application, orchestrating the interaction with the real estate assistant.
-- **Dependencies:** The `requirements.txt` file lists all Python dependencies required for the project.
+2. **Main Interaction Hub**  
+   - The `main_agent` node directs users to specific functionalities based on their needs.
 
+3. **Property Inquiry Process**  
+   - Users seeking property details are directed to the `search_criteria_agent`, which gathers relevant information and queries the `query_database` for detailed property data.
+
+4. **Appointment Management**  
+   - Users looking to schedule appointments are routed through the `appointment_agent`, where they can view and confirm available slots using `appointment_tools`. Specialized needs activate the `leave_specialized_agent` node.
+
+5. **Conclusion of Interaction**  
+   - After addressing client needs, interactions return to the `main_agent` for smooth transitions. The workflow ends at the `__end__` node once tasks are completed.
 
 ## Usage
 
-To use the real estate assistant, follow the setup instructions provided above. Once the environment is set up, run the `main.py` script to interact with the assistant. The assistant can understand natural language queries related to real estate properties and provide relevant information based on the data stored in the database.
+1. **Terminal Access**  
+   - Follow the on-screen prompts for inquiries and appointment scheduling.
 
-## Contributions
+2. **Text Messaging**  
+   - Clients can send text messages to the designated number to interact with the AI agent, who will guide them through making inquiries or scheduling appointments.
 
-Contributions to this project are welcome. If you find any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request on the GitHub repository.
+3. **Phone Interaction**  
+   - By calling the provided number, clients can use voice commands to interact with the AI agent, similar to speaking with a human assistant. This supports both property inquiries and appointment management.
 
-## License
+## Setup
 
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+1. **Install the dependencies**  
+   - Run the following command to install required packages:
+     ```bash
+     pip install -r requirements.txt
+     ```
+
+2. **Set up environment variables**  
+   - Create a `.env` file in the root directory of the project.
+   - Add the necessary environment variables 
+
+3. **Download and set up data**  
+   - Download the real estate dataset from [Kaggle](https://www.kaggle.com/datasets/ahmedshahriarsakib/usa-real-estate-dataset) and place it in the `/data` folder.
+   - Run `csv_to_sql.py` to convert the CSV file into an SQL database.
+
+4. **Run the main application**  
+   - To run the application in the terminal:
+     ```bash
+     python ai_agent.py
+     ```
+   - To run the application on a local server for text and call interactions:
+     1. Run the `ngrok.exe` file.
+     2. Start the server with the following command:
+        ```bash
+        uvicorn app-retell.server:app --reload
+        ```
+
+## Contributing
+Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request on the GitHub repository.
+

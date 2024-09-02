@@ -1,6 +1,8 @@
 import uuid
 import os
 from dotenv import load_dotenv
+from IPython.display import Image, display
+
 
 from src.graph import create_graph
 
@@ -25,6 +27,14 @@ def main():
     os.environ["LANGCHAIN_PROJECT"] = "Real Estate Assistant Project"
 
     graph = create_graph()
+    
+    # try:
+    #     with open("graph.png", "wb") as f:
+    #         f.write(graph.get_graph().draw_mermaid_png())
+    # except Exception:
+    #     # This requires some extra dependencies and is optional
+    #     pass
+    
     thread_id = str(uuid.uuid4())
     config = {
         "configurable": {
@@ -43,9 +53,9 @@ def main():
         questions = [
         "I want to book an appointment to view the apartment on Sept 3 at 10 am.",
         "Change my appointment on Sept 3 to Sept 4.",
-        # "What properties are available in New York?",
-        # "Show me houses with at least 3 bedrooms and 2 bathrooms.",
-        # "Do you have any properties under $500,000?",
+        "What properties are available in New York?",
+        "Show me houses with at least 3 bedrooms and 2 bathrooms.",
+        "Do you have any properties under $500,000?",
         ]
         for question in questions:
             process_single_question(graph, question, config)
