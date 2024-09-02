@@ -15,14 +15,14 @@ from src.util.state import State
 
 account_sid = os.environ["TWILIO_ACCOUNT_SID"]
 auth_token = os.environ["TWILIO_AUTH_TOKEN"]
-phone_number_from = os.environ["PHONE_NUMBER_FROM"]
-phone_number_to = os.environ["PHONE_NUMBER_TO"]
+# phone_number_from = os.environ["PHONE_NUMBER_FROM"]
+# phone_number_to = os.environ["PHONE_NUMBER_TO"]
 
 twilio_client = Client(account_sid, auth_token)
 logger = logging.getLogger(__name__)
 
-# calendar_id = "saminkhann1@gmail.com"
-calendar_id = "lia.xin.weng@gmail.com"
+calendar_id = "saminkhann1@gmail.com"
+# calendar_id = "lia.xin.weng@gmail.com"
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 TIMEZONE = None
 
@@ -85,7 +85,7 @@ def get_calendar_service(credentials: Optional[Credentials] = None) -> Any:
 def get_user_timezone(service):
     try:
         timezone_setting = service.settings().get(setting="timezone").execute()
-        print(f"user's timezone: {timezone_setting.get("value")}")
+        print(f"user's timezone: {timezone_setting.get('value')}")
         return timezone_setting.get("value")
     except Exception as e:
         print(f"An error occurred: {e}")
