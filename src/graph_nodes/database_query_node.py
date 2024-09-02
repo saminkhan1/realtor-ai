@@ -1,9 +1,8 @@
 import sqlite3
 import os
 from langchain_core.messages import AIMessage
-from src.util import State
-import sqlite3
-import os
+
+from src.util.state import State
 
 
 def process_criteria(criteria_key, criteria_value, query, params):
@@ -15,7 +14,7 @@ def query_database(state: State):
     search_criteria = state["search_criteria"]
     # print("search criteria from state", search_criteria)
 
-    db_path = os.path.join(os.path.dirname(__file__), "..", "data", "real_estate_data.db")
+    db_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "real_estate_data.db")
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
