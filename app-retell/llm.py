@@ -65,3 +65,10 @@ class LlmClient:
             content_complete=True,
             end_call=False,
         )
+
+
+    async def get_state(self, config: dict) -> dict:
+        """Get the current state of the conversation."""
+        state = self.graph.get_state(config)
+        return state
+
