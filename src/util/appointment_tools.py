@@ -75,7 +75,6 @@ def get_calendar_service(credentials: Optional[Credentials] = None) -> Any:
 
         global TIMEZONE
         TIMEZONE = get_user_timezone(service)
-        print(f"z: {TIMEZONE}")
 
         return service
     except Exception as e:
@@ -311,10 +310,17 @@ def send_confirmation(confirmation: str) -> str:
         raise
 
 
-appointment_tools = [
-    create_event,
+safe_tools = [
     list_events,
-    delete_event,
-    update_event,
     send_confirmation,
 ]
+
+# These tools modify data and require user confirmation
+sensitive_tools = [
+    create_event,
+    delete_event,
+    update_event,
+    
+]
+
+sensitive_tool_names = {t.name for t in sensitive_tools}

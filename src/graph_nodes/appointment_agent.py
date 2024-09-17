@@ -6,7 +6,7 @@ from langgraph.prebuilt import tools_condition
 from typing import Literal
 
 from src.util.state import State
-from src.util.appointment_tools import appointment_tools
+from src.util.appointment_tools import safe_tools, sensitive_tools, sensitive_tool_names
 from src.util.general_tools import CompleteOrEscalate
 
 
@@ -31,20 +31,29 @@ appointment_agent_prompt = ChatPromptTemplate.from_messages(
 
 
 appointment_agent_runnable = appointment_agent_prompt | llm.bind_tools(
-    appointment_tools + [CompleteOrEscalate]
+    safe_tools + sensitive_tools + [CompleteOrEscalate]
 )
 
 
-def route_appointment_agent(
-    state: State,
-) -> Literal["__end__", "leave_specialized_agent", "appointment_tools"]:
+
+def route_appointment_tools(state: State) -> Literal["__end__", "leave_specialized_agent", "safe_appointment_tools", "sensitive_appointment_tools"]:
     route = tools_condition(state)
     if route == "__end__":
         return "__end__"
     tool_calls = state["messages"][-1].tool_calls
     if tool_calls:
+        
         did_cancel = any(tc["name"] == CompleteOrEscalate.__name__ for tc in tool_calls)
         if did_cancel:
             return "leave_specialized_agent"
-        return "appointment_tools"
+        
+        tool_name = tool_calls[0]["name"]
+        if tool_name in sensitive_tool_names:
+            # # Add the pending action to the state
+            # state["pending_actions"].append({
+            #     "tool_name": tool_name,
+            #     "tool_args": tool_calls[0]["args"]
+            # })
+            return "sensitive_appointment_tools"
+        return "safe_appointment_tools"
     raise ValueError("Invalid route")
