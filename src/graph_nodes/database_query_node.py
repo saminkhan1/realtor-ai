@@ -59,3 +59,5 @@ def query_database(state: State):
     conn.close()
 
     return {"messages": [AIMessage(content=f"Here are the search results: {results}")]}
+
+    return {}

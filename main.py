@@ -2,21 +2,54 @@ import uuid
 import os
 from dotenv import load_dotenv
 from IPython.display import Image, display
+from langchain_core.messages import ToolMessage, HumanMessage
 
 
 from src.graph import create_graph
 
+def get_human_approval(tool_call):
+    return input("Do you approve of the above actions? Type 'yes' to continue, otherwise provide your reasoning:\n\n").strip().lower()
+
+
 def process_single_question(graph, question, config):
     """Process a single question and print the response."""
-    events = graph.stream(
-        {"messages": ("user", question)}, config, stream_mode="values"
-    )
-
-    for event in events:
+    
+    for event in graph.stream(
+        {"messages": [HumanMessage(content=question)]}, config, stream_mode="values"):
         if "messages" in event:
             event["messages"][-1].pretty_print()
 
-    print()  # Add a blank line for better readability between questions
+    snapshot = graph.get_state(config)
+
+    while snapshot.next:
+        # Get the last message and its tool call information
+        last_message = snapshot.values["messages"][-1]
+        if last_message.tool_calls:
+            for tool_call in last_message.tool_calls:
+                # Extract human-readable tool info
+                user_input = get_human_approval(tool_call)
+            
+                if user_input.strip().lower() == "yes":
+                    # Continue with the process
+                    result = graph.invoke(None, config)
+                else:
+                    # Provide reasoning for denying the action
+                    result = graph.invoke(
+                        {
+                            "messages": [
+                                ToolMessage(
+                                    tool_call_id=event["messages"][-1].tool_calls[0]["id"],
+                                    content=f"API call denied by user. Reasoning: '{user_input}'. Continue assisting, accounting for the user's input.",
+                                )
+                            ]
+                        },
+                        config,
+                    )
+                
+                # Update the snapshot to reflect the new state
+                snapshot = graph.get_state(config)
+
+        print()  # Add a blank line for better readability between questions
 
 def main():
     load_dotenv()
@@ -51,8 +84,8 @@ def main():
 
     if choice == "1":
         questions = [
-        "I want to book an appointment to view the apartment on Sept 3 at 10 am.",
-        "Change my appointment on Sept 3 to Sept 4.",
+        "I want to book an appointment to view the first property on Sept 14 at 10 am.",
+        "Change my appointment on Sept 14 to Sept 15.",
         "What properties are available in New York?",
         "Show me houses with at least 3 bedrooms and 2 bathrooms.",
         "Do you have any properties under $500,000?",
