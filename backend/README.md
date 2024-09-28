@@ -12,7 +12,7 @@ Welcome to the AI Agent for Real Estate Professionals. This application is desig
    - Integrates with Google Calendar to facilitate the scheduling of property viewings and consultations, allowing clients to book appointments without manual coordination.
 
 3. **Multi-Platform Access**  
-   - Accessible through terminal, text messaging, and phone calls, ensuring real-time communication with clients across various channels.
+   - Accessible through chat-widgets, text messaging, and phone calls, ensuring real-time communication with clients across various channels.
 
 4. **24/7 Availability**  
    - Operates around the clock, ensuring no inquiries go unanswered, reducing missed opportunities, and enhancing client satisfaction.
@@ -22,31 +22,36 @@ Welcome to the AI Agent for Real Estate Professionals. This application is desig
 
 ![AI agents graph](graph.png)
 
+### AI Agents Overview
+
 1. **Initialization**  
-   - The application starts at the `__start__` node, initiating the AI agent.
+   - The application begins at the `__start__` node, initializing the AI agent.
 
 2. **Main Interaction Hub**  
-   - The `main_agent` node directs users to specific functionalities based on their needs.
+   - The `main_agent` node directs users to specific functionalities based on their needs, acting as a central hub for all client interactions.
 
 3. **Property Inquiry Process**  
-   - Users seeking property details are directed to the `search_criteria_agent`, which gathers relevant information and queries the `query_database` for detailed property data.
+   - Users seeking property details are routed to the `search_criteria_agent`, which gathers relevant information and queries the `query_database` for detailed property data.
 
 4. **Appointment Management**  
-   - Users looking to schedule appointments are routed through the `appointment_agent`, where they can view and confirm available slots using `appointment_tools`. Specialized needs activate the `leave_specialized_agent` node.
+   - Users looking to schedule appointments are guided through the `appointment_agent`, where they can view and confirm available slots using `appointment_tools`. For specialized requests, the `leave_specialized_agent` node is activated.
 
-5. **Conclusion of Interaction**  
-   - After addressing client needs, interactions return to the `main_agent` for smooth transitions. The workflow ends at the `__end__` node once tasks are completed.
+5. **Human-in-the-Loop**  
+   - Agents can sometimes be unreliable or require additional verification for complex tasks. For operations that involve writing or updating data (such as making appointments or altering property details), human input is required to ensure accuracy and correctness. This layer of human approval guarantees that the system is functioning as intended.
+
+6. **Conclusion of Interaction**  
+   - After addressing client needs, the interactions return to the `main_agent` for seamless transitions. The workflow concludes at the `__end__` node once all tasks are completed.
 
 ## Usage
 
-1. **Terminal Access**  
-   - Follow the on-screen prompts for inquiries and appointment scheduling.
+1. **Chatbot Widget**  
+   - Clients can interact through chatbot widgets, which are accessed via WebSockets for real-time communication. This offers an intuitive, web-based interface for inquiries or scheduling appointments.
 
 2. **Text Messaging**  
-   - Clients can send text messages to the designated number to interact with the AI agent, who will guide them through making inquiries or scheduling appointments.
+   - Clients can send text messages to the designated number to interact with the AI agent. The agent will guide them through property inquiries or appointment scheduling.
 
 3. **Phone Interaction**  
-   - By calling the provided number, clients can use voice commands to interact with the AI agent, similar to speaking with a human assistant. This supports both property inquiries and appointment management.
+   - By calling the provided number, clients can use voice commands to communicate with the AI agent, similar to speaking with a human assistant. Both property inquiries and appointment management are supported through this channel.
 
 ## Setup
 
