@@ -1,11 +1,35 @@
 .env
-data/realtor-data.csv
-data/real_estate_data.db
+/backend/data/realtor-data.csv
+/backend/venv
+/backend/token.json
+/backend/credentials.json
+/backend/src/__pycache__
+*__pycache__
+/backend/data/real_estate_data.db
 
-__pycache__
-__init__.py
-venv/
+/frontend/node_modules
+/frontend/.next 
+/frontend/public
+/frontend/out/
+/frontend/coverage
+/frontend/build
 
-token.json
-credentials.json
 
+
+# production
+/build
+
+
+
+# debug
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+
+# vercel
+/frontend/.vercel
+
+# typescript
+*.tsbuildinfo
+/frontend/next-env.d.ts

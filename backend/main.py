@@ -84,7 +84,7 @@ def main():
 
     if choice == "1":
         questions = [
-        "I want to book an appointment to view the first property on Sept 14 at 10 am.",
+        "I want to book an appointment to view the first property on Sept 28 at 10 am.",
         "Change my appointment on Sept 14 to Sept 15.",
         "What properties are available in New York?",
         "Show me houses with at least 3 bedrooms and 2 bathrooms.",
