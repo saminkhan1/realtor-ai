@@ -22,6 +22,7 @@ from .custom_types import ConfigResponse, ResponseRequiredRequest
 from .llm import LlmClient
 from .twilio_server import TwilioClient
 from src.graph import create_graph
+from src.util.appointment_tools import sensitive_tool_names
 
 load_dotenv(override=True)
 
@@ -109,99 +110,66 @@ async def websocket_endpoint(
         while True:
             try:
                 raw_data = await asyncio.wait_for(websocket.receive_text(), timeout=3600)  # 1 hour timeout
-                try:
-                    data = json.loads(raw_data)
-                    if isinstance(data, dict) and "content" in data:
-                        message_content = data["content"]
-                    elif isinstance(data, dict) and "approval" in data:
-                        # Handle tool call approval
-                        user_input = data["approval"]
-                        if user_input.lower() == "yes":
-                            result = graph.invoke(None, config)
-                        else:
-                            result = graph.invoke(
-                                {
-                                    "messages": [
-                                        ToolMessage(
-                                            tool_call_id=last_message.tool_calls[0].id,
-                                            content=f"API call denied by user. Reasoning: '{user_input}'. Continue assisting, accounting for the user's input.",
-                                        )
-                                    ]
-                                },
-                                config,
-                            )
-                        await websocket.send_json({
-                            "type": "bot_response",
-                            "content": result["messages"][-1].content,
-                            "timestamp": datetime.now().isoformat()
-                        })
-                        continue
-                    else:
-                        raise ValueError("Invalid message format")
-                except (json.JSONDecodeError, ValueError) as e:
-                    await websocket.send_json({"type": "error", "content": str(e)})
-                    continue
-
-                try:
-                    message = ChatMessage(content=message_content)
-                except ValidationError as val_err:
-                    logger.error(f"Validation error: {str(val_err)}")
-                    await websocket.send_json({"type": "error", "content": "Invalid message format."})
-                    continue
+                data = json.loads(raw_data)
                 
-                # Process the message using the graph
-                for event in graph.stream(
-                    {"messages": [HumanMessage(content=message.content)]}, 
-                    config, 
-                    stream_mode="values"
-                ):
-                    if "messages" in event:
-                        await websocket.send_json({
-                            "type": "bot_response",
-                            "content": event["messages"][-1].content,
-                            "timestamp": datetime.now().isoformat()
-                        })
+                if "content" in data:
+                    message_content = data["content"]
+                    user_message = HumanMessage(content=message_content)
+                    
+                    final_response = ""
+                    for event in graph.stream(
+                        {"messages": [user_message]}, 
+                        config, 
+                        stream_mode="values"
+                    ):
+                        if "messages" in event:
+                            final_response = event["messages"][-1].content
 
-                snapshot = graph.get_state(config)
+                    snapshot = graph.get_state(config)
 
-                while snapshot.next:
-                    last_message = snapshot.values["messages"][-1]
-                    if last_message.tool_calls:
-                        for tool_call in last_message.tool_calls:
-                            # Send tool call info to client for approval
-                            await websocket.send_json({
-                                "type": "tool_call",
-                                "content": str(tool_call),
-                                "timestamp": datetime.now().isoformat()
-                            })
-                            
-                            # Wait for client approval
-                            approval_data = await websocket.receive_json()
-                            user_input = approval_data.get("approval", "").lower()
+                    while snapshot.next:
+                        last_message = snapshot.values["messages"][-1]
+                        if last_message.tool_calls:
+                            for tool_call in last_message.tool_calls:
+                                if tool_call["name"] in sensitive_tool_names:
+                                    approval_request = f"I need your approval to {tool_call['name']}. Details: {tool_call['args']}. Do you approve? Please respond with 'Yes' or 'No'."
+                                    await websocket.send_json({
+                                        "type": "bot_response",
+                                        "content": approval_request,
+                                        "timestamp": datetime.now().isoformat()
+                                    })
+                                    
+                                    approval_data = await websocket.receive_json()
+                                    user_input = approval_data.get("content", "").lower()
 
-                            if user_input == "yes":
-                                result = graph.invoke(None, config)
-                            else:
-                                result = graph.invoke(
-                                    {
-                                        "messages": [
-                                            ToolMessage(
-                                                tool_call_id=last_message.tool_calls[0].id,
-                                                content=f"API call denied by user. Reasoning: '{user_input}'. Continue assisting, accounting for the user's input.",
-                                            )
-                                        ]
-                                    },
-                                    config,
-                                )
-                            
-                            # Send the result back to the client
-                            await websocket.send_json({
-                                "type": "bot_response",
-                                "content": result["messages"][-1].content,
-                                "timestamp": datetime.now().isoformat()
-                            })
+                                    if user_input in ["yes", "y", "approve", "ok"]:
+                                        result = graph.invoke(None, config)
+                                        final_response = result["messages"][-1].content
+                                    else:
+                                        result = graph.invoke(
+                                            {
+                                                "messages": [
+                                                    ToolMessage(
+                                                        tool_call_id=tool_call["id"],
+                                                        content=f"Action not approved. Reason: {user_input}. Please suggest alternatives or ask if there's anything else I can help with.",
+                                                    )
+                                                ]
+                                            },
+                                            config,
+                                        )
+                                        final_response = result["messages"][-1].content
+                                else:
+                                    result = graph.invoke(None, config)
+                                    final_response = result["messages"][-1].content
 
-                            snapshot = graph.get_state(config)
+                        snapshot = graph.get_state(config)
+
+                    # Send the final response to the client
+                    await websocket.send_json({
+                        "type": "bot_response",
+                        "content": final_response,
+                        "timestamp": datetime.now().isoformat()
+                    })
 
                 active_sessions[thread_id]["last_activity"] = datetime.now()
 
@@ -420,4 +388,3 @@ async def general_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"message": "An unexpected error occurred. Please try again later."},
     )
-
