@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import logging
 from typing import List, Dict, Optional, Any
@@ -310,17 +311,124 @@ def send_confirmation(confirmation: str) -> str:
         raise
 
 
+@tool
+def get_calendar_list() -> List[Dict[str, Any]]:
+    """
+    Retrieve the list of calendars accessible by the user.
+
+    Returns:
+        List[Dict[str, Any]]: List of calendars.
+
+    Raises:
+        HttpError: If there's an error in the API request.
+    """
+    try:
+        service = get_calendar_service()
+        calendar_list = service.calendarList().list().execute()
+        return calendar_list.get("items", [])
+    except HttpError as error:
+        logger.error(f"An error occurred while retrieving calendar list: {error}")
+        raise
+
+
+@tool
+def get_freebusy_info(
+    calendar_ids: List[str],
+    start_time: str,
+    end_time: str,
+    time_zone: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Returns free/busy information for a set of calendars.
+
+    Args:
+        calendar_ids (List[str]): A list of calendar IDs to check.
+        start_time (str): Start time of the period to check (RFC3339 timestamp).
+        end_time (str): End time of the period to check (RFC3339 timestamp).
+        time_zone (Optional[str]): Time zone used in the response. Optional. The default is UTC
+
+    Returns:
+        Dict[str, Any]: Free/busy information for the specified calendars.
+
+    Raises:
+        HttpError: If there's an error in the API request.
+        ValueError: If required parameters are missing or invalid.
+    """
+    if not calendar_ids:
+        raise ValueError("calendar_ids list is required and cannot be empty")
+
+    if not start_time or not end_time:
+        raise ValueError("start_time and end_time are required")
+
+    try:
+        service = get_calendar_service()
+        body = {
+            "timeMin": start_time,
+            "timeMax": end_time,
+            "timeZone": time_zone or TIMEZONE,
+            "items": [{"id": calendar_id} for calendar_id in calendar_ids],
+        }
+
+        freebusy_result = service.freebusy().query(body=body).execute()
+        return freebusy_result["calendars"]
+    except HttpError as error:
+        logger.error(f"An error occurred while checking availability: {error}")
+        raise
+
+@tool
+def is_available_for_meeting(
+    service: Any,
+    calendar_id: str,
+    start_time: datetime,
+    end_time: datetime,
+    time_zone: str = "America/New_York"
+) -> bool:
+    """
+    Checks if the user is available for a meeting within the given time range.
+
+    Args:
+        service (Any): Authorized Calendar API service instance.
+        calendar_id (str): The ID of the calendar to check.
+        start_time (datetime): The start time of the proposed meeting.
+        end_time (datetime): The end time of the proposed meeting.
+        time_zone (str): The time zone to use. Defaults to "America/New_York".
+
+    Returns:
+        bool: True if the user is available, False otherwise.
+    """
+    # Convert datetime objects to RFC3339 format
+    time_min = start_time.isoformat()
+    time_max = end_time.isoformat()
+
+    # Get free/busy information
+    freebusy_info = get_freebusy_info(
+        service, [calendar_id], time_min, time_max, time_zone
+    )
+
+    # Check for conflicts
+    for calendar_id, calendar_info in freebusy_info.items():
+        busy_times = calendar_info.get("busy", [])
+        for busy_period in busy_times:
+            busy_start = datetime.fromisoformat(busy_period["start"].replace("Z", "+00:00"))
+            busy_end = datetime.fromisoformat(busy_period["end"].replace("Z", "+00:00"))
+            
+            if (start_time < busy_end) and (end_time > busy_start):
+                return False  # There is a conflict, so not available
+
+    return True  # No conflicts found, so available
+
 safe_tools = [
     list_events,
     send_confirmation,
+    get_calendar_list,
+    get_freebusy_info,
+    is_available_for_meeting,
 ]
 
-# These tools modify data and require user confirmation
 sensitive_tools = [
     create_event,
     delete_event,
     update_event,
-    
 ]
 
 sensitive_tool_names = {t.name for t in sensitive_tools}

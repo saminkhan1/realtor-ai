@@ -9,7 +9,6 @@ from googleapiclient.errors import HttpError
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-from src.util.state import State
 
 # Configure logging
 logging.basicConfig(
@@ -37,10 +36,10 @@ def get_calendar_service(credentials: Optional[Credentials] = None) -> Any:
     """
     try:
         if not credentials:
-            if os.path.exists("token.json"):
+            if os.path.exists("backend/token.json"):
                 try:
                     credentials = Credentials.from_authorized_user_file(
-                        "token.json", SCOPES
+                        "backend/token.json", SCOPES
                     )
                 except IOError as e:
                     raise IOError(f"Error reading token file: {str(e)}")
@@ -54,10 +53,10 @@ def get_calendar_service(credentials: Optional[Credentials] = None) -> Any:
                 else:
                     try:
                         flow = InstalledAppFlow.from_client_secrets_file(
-                            "credentials.json", SCOPES
+                            "backend/credentials.json", SCOPES
                         )
                         credentials = flow.run_local_server(port=8080)
-                        with open("token.json", "w") as token_file:
+                        with open("backend/token.json", "w") as token_file:
                             token_file.write(credentials.to_json())
                     except IOError as e:
                         raise IOError(f"Error writing token file: {str(e)}")
@@ -362,6 +361,48 @@ def get_freebusy_info(
         raise
 
 
+def is_available_for_meeting(
+    service: Any,
+    calendar_id: str,
+    start_time: datetime,
+    end_time: datetime,
+    time_zone: str = "America/New_York"
+) -> bool:
+    """
+    Checks if the user is available for a meeting within the given time range.
+
+    Args:
+        service (Any): Authorized Calendar API service instance.
+        calendar_id (str): The ID of the calendar to check.
+        start_time (datetime): The start time of the proposed meeting.
+        end_time (datetime): The end time of the proposed meeting.
+        time_zone (str): The time zone to use. Defaults to "America/New_York".
+
+    Returns:
+        bool: True if the user is available, False otherwise.
+    """
+    # Convert datetime objects to RFC3339 format
+    time_min = start_time.isoformat()
+    time_max = end_time.isoformat()
+
+    # Get free/busy information
+    freebusy_info = get_freebusy_info(
+        service, [calendar_id], time_min, time_max, time_zone
+    )
+
+    # Check for conflicts
+    for calendar_id, calendar_info in freebusy_info.items():
+        busy_times = calendar_info.get("busy", [])
+        for busy_period in busy_times:
+            busy_start = datetime.fromisoformat(busy_period["start"].replace("Z", "+00:00"))
+            busy_end = datetime.fromisoformat(busy_period["end"].replace("Z", "+00:00"))
+            
+            if (start_time < busy_end) and (end_time > busy_start):
+                return False  # There is a conflict, so not available
+
+    return True  # No conflicts found, so available
+
+
 def main() -> None:
     """Example usage of the Google Calendar functions."""
     try:
@@ -393,14 +434,13 @@ def main() -> None:
 
         # Get free/busy information
         calendar_ids = [calendar_id]
-        time_min = datetime(2024, 8, 1).isoformat() + "Z"
+        time_min = datetime(2024, 10, 5).isoformat() + "Z"
         time_max = (
-            datetime(2024, 8, 1) + timedelta(days=1) - timedelta(seconds=1)
+            datetime(2024, 10, 7) + timedelta(days=1) - timedelta(seconds=1)
         ).isoformat() + "Z"
         freebusy_info = get_freebusy_info(
             service, calendar_ids, time_min, time_max, "America/New_York"
         )
-
         logger.info("\nFree/Busy information:")
         for calendar_id, calendar_info in freebusy_info.items():
             logger.info(f"Calendar ID: {calendar_id}")
