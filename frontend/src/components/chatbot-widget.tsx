@@ -133,7 +133,7 @@ export default function ChatbotWidget({ websiteId }) {
             <div className="flex-grow overflow-y-auto p-4 space-y-4">
               {messages.map((message) => (
                 <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] p-3 rounded-lg ${message.sender === 'user' ? 'bg-blue-100 text-blue-900' : 'bg-gray-100'}`}>
+                  <div className={`max-w-[80%] p-3 rounded-lg break-words whitespace-pre-wrap ${message.sender === 'user' ? 'bg-blue-100 text-blue-900' : 'bg-gray-100'}`}>
                     {message.text}
                   </div>
                 </div>
