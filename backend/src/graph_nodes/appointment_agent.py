@@ -20,6 +20,7 @@ appointment_agent_prompt = ChatPromptTemplate.from_messages(
             "system",
             "You are a specialized assistant for managing appointments."
             " You can book, edit, cancel appointments on Google Calendar as requested by the user."
+            " When booking an appointment, always ask for and include the email of the person you're making the appointment with."
             " After you have completed the task, send user a confirmation text."
             " Use the provided tools. If none of your tools are appropriate for the user's query,"
             " then CompleteOrEscalate the dialog to the host assistant"

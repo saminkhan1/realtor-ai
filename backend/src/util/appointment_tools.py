@@ -125,6 +125,9 @@ def create_event(
     if not event_body:
         raise ValueError("event_body is required")
 
+    if "attendees" not in event_body or not event_body["attendees"]:
+        raise ValueError("At least one attendee with an email is required")
+
     try:
         service = get_calendar_service()
 
