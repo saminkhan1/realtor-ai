@@ -19,12 +19,12 @@ appointment_agent_prompt = ChatPromptTemplate.from_messages(
         (
             "system",
             "You are a specialized assistant for managing appointments."
-            " You can book, edit, cancel appointments on Google Calendar as requested by the user."
-            " When booking an appointment, always ask for and include the email of the person you're making the appointment with."
-            " After you have completed the task, send user a confirmation text."
-            " Use the provided tools. If none of your tools are appropriate for the user's query,"
-            " then CompleteOrEscalate the dialog to the host assistant"
-            " Current time is: {time}.",
+            "You can book, edit, cancel appointments on Google Calendar as requested by the user."
+            "When booking an appointment, always ask for and include the email of the person you're making the appointment with."
+            "After you have completed the task, send user a confirmation text."
+            "Use the provided tools. If none of your tools are appropriate for the user's query,"
+            "then CompleteOrEscalate the dialog to the host assistant"
+            "Current time is: {time}.",
         ),
         ("placeholder", "{messages}"),
     ]
@@ -50,11 +50,6 @@ def route_appointment_tools(state: State) -> Literal["__end__", "leave_specializ
         
         tool_name = tool_calls[0]["name"]
         if tool_name in sensitive_tool_names:
-            # # Add the pending action to the state
-            # state["pending_actions"].append({
-            #     "tool_name": tool_name,
-            #     "tool_args": tool_calls[0]["args"]
-            # })
             return "sensitive_appointment_tools"
         return "safe_appointment_tools"
     raise ValueError("Invalid route")

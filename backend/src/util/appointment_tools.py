@@ -14,12 +14,12 @@ from src.util.state import State
 
 # from src.util.g_cal_functions import get_calendar_service
 
-account_sid = os.environ["TWILIO_ACCOUNT_SID"]
-auth_token = os.environ["TWILIO_AUTH_TOKEN"]
-# phone_number_from = os.environ["PHONE_NUMBER_FROM"]
-# phone_number_to = os.environ["PHONE_NUMBER_TO"]
+# account_sid = os.environ["TWILIO_ACCOUNT_SID"]
+# auth_token = os.environ["TWILIO_AUTH_TOKEN"]
+# # phone_number_from = os.environ["PHONE_NUMBER_FROM"]
+# # phone_number_to = os.environ["PHONE_NUMBER_TO"]
 
-twilio_client = Client(account_sid, auth_token)
+# twilio_client = Client(account_sid, auth_token)
 logger = logging.getLogger(__name__)
 
 calendar_id = "saminkhann1@gmail.com"
